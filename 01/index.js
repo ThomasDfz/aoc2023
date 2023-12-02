@@ -14,10 +14,13 @@ lines.forEach(line => {
 
 console.log(`1) ${sum}`);
 
+
+/**
+ * Part 2
+ */
 sum = 0;
 
 lines.forEach(line => {
-  // replace all numbers by their digits without breaking overlap (oneight => 1eight => 18)
   const digits = line
     .replaceAll('one', 'o1e')
     .replaceAll('two', 't2')
