@@ -20,14 +20,16 @@ console.log(`1) ${points}`);
 /**
  * Part 2
  */
+let sum = 0;
+
 for (let i = 0; i < cards.length; i += 1) {
   const { value, count } = cards[i];
 
   for (let j = i + 1; j <= Math.min(i + value, cards.length - 1); j += 1) {
     cards[j].count += count;
   }
-}
 
-const sum = cards.reduce((acc, card) => acc + card.count, 0);
+  sum += count;
+}
 
 console.log(`2) ${sum}`);
