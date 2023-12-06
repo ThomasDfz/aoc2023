@@ -5,7 +5,7 @@ const seeds = data
   .split(': ')
   .pop()
   .split(' ')
-  .map(e => e.trim()).map(Number);
+  .map(Number);
 
 const [
   soilMap,
