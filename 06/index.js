@@ -26,7 +26,7 @@ console.log(`1) ${product}`);
 /**
  * Part 2
  */
-const time = times.join('');
-const record = records.join('');
+const time = Number(times.join(''));
+const record = Number(records.join(''));
 
 console.log(`2) ${countWaysToBeat(time, record)}`);
