@@ -26,14 +26,16 @@ class Hand {
     this.jokers = withJokers;
     this.cards = cards.split('');
     this.bid = Number(bid);
-    this.value = this.getHandType() * 10e9 + this.getHandValue();
+    this.value = this.getType() * 10e9 + this.getValue();
   }
 
-  getHandValue() {
+  // turns the hand into a 10-digit value, each card being 2 digits
+  getValue() {
     return Number(this.cards.map(e => !isNaN(e) ? `0${e}` : ((this.jokers && e === 'J') ? '01' : FACES_VALUES[e])).join(''));
   }
 
-  getHandType() {
+  // returns 0..6 based on the type of the hand, 6 being a five of a kind, 0 being a high card
+  getType() {
     const cards = this.jokers
       ? this.cards.join('').replaceAll('J', getBestCard(this.cards)).split('')
       : this.cards;
@@ -59,8 +61,8 @@ const getWinnings = hands => hands
   .sort((a, b) => a.value - b.value)
   .reduce((acc, hand, i) => acc + hand.bid * (i + 1), 0);
 
-const hand1 = data.map(hand => new Hand(hand));
-console.log(`1) ${getWinnings(hand1)}`);
+const handsP1 = data.map(hand => new Hand(hand));
+console.log(`1) ${getWinnings(handsP1)}`);
 
-const hand2 = data.map(hand => new Hand(hand, true));
-console.log(`2) ${getWinnings(hand2)}`);
+const handsP2 = data.map(hand => new Hand(hand, true));
+console.log(`2) ${getWinnings(handsP2)}`);
