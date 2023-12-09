@@ -6,20 +6,19 @@ const histories = data
 
 const getHistoryNextValue = history => {
   let current = history;
-  const sequences = [history];
+  let sum = current[current.length - 1];
 
   while ((new Set(current)).size !== 1) {
-    const newSequence = [];
+    current = current.reduce((acc, curr, i) => {
+      if (i < current.length - 1) acc.push(current[i + 1] - current[i]);
 
-    for (let i = 1; i < current.length; i += 1) {
-      newSequence.push(current[i] - current[i - 1]);
-    }
+      return acc;
+    }, []);
 
-    sequences.push(newSequence);
-    current = newSequence;
+    sum += current[current.length - 1];
   }
 
-  return sequences.reduce((acc, sequence) => acc += sequence[sequence.length - 1], 0);
+  return sum;
 };
 
 let sum = histories.reduce((acc, history) => acc += getHistoryNextValue(history), 0);
@@ -29,8 +28,6 @@ console.log(`1) ${sum}`);
 /**
  * Part 2
  */
-const reversedHistories = histories.map(history => history.reverse());
-
-sum = reversedHistories.reduce((acc, history) => acc += getHistoryNextValue(history), 0);
+sum = histories.reduce((acc, history) => acc += getHistoryNextValue(history.reverse), 0);
 
 console.log(`2) ${sum}`);
