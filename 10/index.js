@@ -15,7 +15,7 @@ const map = data
 // string utils for Set & Map keys
 const asCoord = (x, y) => `${x};${y}`;
 const asPath = (fromX, fromY, toX, toY) => `${asCoord(fromX, fromY)}->${asCoord(toX, toY)}`;
-const asVector = (v) => `${v.x};${v.y};${v.vector}`;
+const asVector = (v) => `${v.x};${v.y};${v.direction}`;
 
 // returns true if tile1 & tile2 are connected depending on the direction, false otherwise
 const isConnected = (tile1, tile2, direction) => {
@@ -87,7 +87,7 @@ const valids = [];
 for (let i = minX; i <= maxX; i += 1) {
   for (let j = minY; j < maxY; j += 1) {
     if (!loop.has(asCoord(i, j))) {
-      candidates.push({ x: i, y: j, vector: 'down' });
+      candidates.push({ x: i, y: j, direction: 'down' });
     }
   }
 }
@@ -96,10 +96,10 @@ const marked = new Set();
 
 // returns true if the vectors intersects with the loop, false otherwise
 const doesIntersect = (v) => {
-  if (v.vector === 'down') {
+  if (v.direction === 'down') {
     return paths.has(asPath(v.x, v.y - 1, v.x, v.y)) || paths.has(asPath(v.x, v.y, v.x, v.y - 1));
   }
-  if (v.vector === 'right') {
+  if (v.direction === 'right') {
     return paths.has(asPath(v.x - 1, v.y, v.x, v.y)) || paths.has(asPath(v.x, v.y, v.x - 1, v.y));
   }
 };
@@ -107,23 +107,23 @@ const doesIntersect = (v) => {
 const getVectorNeighbours = (v) => {
   let neighbours = [];
 
-  if (v.vector === 'right') {
+  if (v.direction === 'right') {
     neighbours = [
-      { x: v.x, y: v.y - 1, vector: 'right' },
-      { x: v.x, y: v.y + 1, vector: 'right' },
-      { x: v.x, y: v.y, vector: 'down' },
-      { x: v.x - 1, y: v.y, vector: 'down' },
-      { x: v.x - 1, y: v.y + 1, vector: 'down' },
-      { x: v.x, y: v.y + 1, vector: 'down' },
+      { x: v.x, y: v.y - 1, direction: 'right' },
+      { x: v.x, y: v.y + 1, direction: 'right' },
+      { x: v.x, y: v.y, direction: 'down' },
+      { x: v.x - 1, y: v.y, direction: 'down' },
+      { x: v.x - 1, y: v.y + 1, direction: 'down' },
+      { x: v.x, y: v.y + 1, direction: 'down' },
     ];
-  } else if (v.vector === 'down') {
+  } else if (v.direction === 'down') {
     neighbours = [
-      { x: v.x, y: v.y, vector: 'right' },
-      { x: v.x - 1, y: v.y, vector: 'down' },
-      { x: v.x, y: v.y - 1, vector: 'right' },
-      { x: v.x + 1, y: v.y - 1, vector: 'right' },
-      { x: v.x + 1, y: v.y, vector: 'down' },
-      { x: v.x + 1, y: v.y, vector: 'right' },
+      { x: v.x, y: v.y, direction: 'right' },
+      { x: v.x - 1, y: v.y, direction: 'down' },
+      { x: v.x, y: v.y - 1, direction: 'right' },
+      { x: v.x + 1, y: v.y - 1, direction: 'right' },
+      { x: v.x + 1, y: v.y, direction: 'down' },
+      { x: v.x + 1, y: v.y, direction: 'right' },
     ];
   }
 
@@ -134,10 +134,10 @@ const getVectorNeighbours = (v) => {
 
 const atLeastOneEdgeVector = (vectors) => {
   return vectors.some(n => {
-    if (n.vector === 'down') {
+    if (n.direction === 'down') {
       return (n.x === 0 || n.x === map.length - 1);
     }
-    if (n.vector === 'right') {
+    if (n.direction === 'right') {
       return (n.y === 0 || n.y === map[0].length - 1);
     }
   });
@@ -148,15 +148,17 @@ const isVectorInside = (vector) => {
 
   const neighbours = getVectorNeighbours(vector);
 
-  neighbours.forEach(n => marked.add(asVector(n)));
+  if (!neighbours.length) {
+    return true;
+  }
 
-  if (!neighbours.length) return true;
+  neighbours.forEach(n => marked.add(asVector(n)));
 
   if (atLeastOneEdgeVector(neighbours)) {
     return false;
   }
 
-  return neighbours.every(n => isVectorInside(n));
+  return neighbours.every(isVectorInside);
 };
 
 candidates.forEach(candidate => {
