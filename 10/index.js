@@ -1,5 +1,5 @@
 const data = require('../parser')();
-let currentX = 0, currentY = 0;
+let currentX = 0, currentY = 0, maxX = 0, maxY = 0, minX = Number.MAX_SAFE_INTEGER, minY = Number.MAX_SAFE_INTEGER;
 
 const map = data
   .split('\n')
@@ -12,8 +12,12 @@ const map = data
     return line.split('');
   });
 
+// string utils for Set & Map keys
 const asCoord = (x, y) => `${x};${y}`;
+const asPath = (fromX, fromY, toX, toY) => `${asCoord(fromX, fromY)}->${asCoord(toX, toY)}`;
+const asVector = (v) => `${v.x};${v.y};${v.vector}`;
 
+// returns true if tile1 & tile2 are connected depending on the direction, false otherwise
 const isConnected = (tile1, tile2, direction) => {
   switch (direction) {
     case 'up':
@@ -33,76 +37,134 @@ const loop = new Set();
 let canMove = true;
 
 const canMoveUp = (x, y) => (x > 0 && isConnected(map[x][y], map[x - 1][y], 'up') && !loop.has(asCoord(x - 1, y)));
-
 const canMoveRight = (x, y) => (y < map[0].length - 1 && isConnected(map[x][y], map[x][y + 1], 'right') && !loop.has(asCoord(x, y + 1)));
-
 const canMoveDown = (x, y) => (x < map.length - 1 && isConnected(map[x][y], map[x + 1][y], 'down') && !loop.has(asCoord(x + 1, y)));
-
 const canMoveLeft = (x, y) => (y > 0 && isConnected(map[x][y], map[x][y - 1], 'left') && !loop.has(asCoord(x, y - 1)));
 
+const paths = new Set(); // store paths for p2
+
+const startX = currentX;
+const startY = currentY;
+
+/**
+ * Part 1
+ */
 do {
   loop.add(asCoord(currentX, currentY));
+  minX = Math.min(minX, currentX);
+  maxX = Math.max(maxX, currentX);
+  minY = Math.min(minY, currentY);
+  maxY = Math.max(maxY, currentY);
+
 
   if (canMoveUp(currentX, currentY)) {
+    paths.add(asPath(currentX, currentY, currentX - 1, currentY));
     currentX -= 1;
   } else if (canMoveRight(currentX, currentY)) {
+    paths.add(asPath(currentX, currentY, currentX, currentY + 1));
     currentY += 1;
   } else if (canMoveDown(currentX, currentY)) {
+    paths.add(asPath(currentX, currentY, currentX + 1, currentY));
     currentX += 1;
   } else if (canMoveLeft(currentX, currentY)) {
+    paths.add(asPath(currentX, currentY, currentX, currentY - 1));
     currentY -= 1;
   } else {
+    paths.add(asPath(currentX, currentY, startX, startY));
+    paths.add(`${asCoord(currentX, currentY)}->${asCoord(startX, startY)}`);
     canMove = false;
   }
 } while (canMove);
 
-console.log(Math.ceil(loop.size / 2));
+console.log('Part 1', Math.ceil(loop.size / 2));
 
+/**
+ * Part 2
+ */
+const candidates = [];
+const valids = [];
 
-// TODO :  get bounds of loop instead of map bounds ???
-
-const isInside = (x, y) => {
-  let ups = [], down = [], right = [], left = [];
-  for (let i = 0; i < x; i += 1) {
-    if (loop.has(asCoord(i, y))) {
-      ups.push({ x: i, y });
-    }
-  }
-  for (let i = x + 1; i < map.length; i += 1) {
-    if (loop.has(asCoord(i, y))) {
-      down.push({ x: i, y });
-    }
-  }
-  for (let j = 0; j < y; j += 1) {
-    if (loop.has(asCoord(x, j))) {
-      left.push({ x, y: j });
-    }
-  }
-  for (let j = y + 1; j < map[0].length; j += 1) {
-    if (loop.has(asCoord(x, j))) {
-      right.push({ x, y: j });
-    }
-  }
-  if (
-    ups.length % 2 === 1
-    && down.length % 2 === 1
-    && left.length % 2 === 1
-    && down.length % 2 === 1
-  ) {
-    console.log(x, y, 'is inside');
-    return true;
-  } else {
-    return false;
-  }
-};
-
-let count = 0;
-
-for (let x = 0; x < map.length; x += 1) {
-  for (let y = 0; y < map[x].length; y += 1) {
-    if (!loop.has(asCoord(x, y)) && isInside(x, y)) {
-      count ++;
+for (let i = minX; i <= maxX; i += 1) {
+  for (let j = minY; j < maxY; j += 1) {
+    if (!loop.has(asCoord(i, j))) {
+      candidates.push({ x: i, y: j, vector: 'down' });
     }
   }
 }
-console.log(count);
+
+const marked = new Set();
+
+// returns true if the vectors intersects with the loop, false otherwise
+const doesIntersect = (v) => {
+  if (v.vector === 'down') {
+    return paths.has(asPath(v.x, v.y - 1, v.x, v.y)) || paths.has(asPath(v.x, v.y, v.x, v.y - 1));
+  }
+  if (v.vector === 'right') {
+    return paths.has(asPath(v.x - 1, v.y, v.x, v.y)) || paths.has(asPath(v.x, v.y, v.x - 1, v.y));
+  }
+};
+
+const getVectorNeighbours = (v) => {
+  let neighbours = [];
+
+  if (v.vector === 'right') {
+    neighbours = [
+      { x: v.x, y: v.y - 1, vector: 'right' },
+      { x: v.x, y: v.y + 1, vector: 'right' },
+      { x: v.x, y: v.y, vector: 'down' },
+      { x: v.x - 1, y: v.y, vector: 'down' },
+      { x: v.x - 1, y: v.y + 1, vector: 'down' },
+      { x: v.x, y: v.y + 1, vector: 'down' },
+    ];
+  } else if (v.vector === 'down') {
+    neighbours = [
+      { x: v.x, y: v.y, vector: 'right' },
+      { x: v.x - 1, y: v.y, vector: 'down' },
+      { x: v.x, y: v.y - 1, vector: 'right' },
+      { x: v.x + 1, y: v.y - 1, vector: 'right' },
+      { x: v.x + 1, y: v.y, vector: 'down' },
+      { x: v.x + 1, y: v.y, vector: 'right' },
+    ];
+  }
+
+  return neighbours
+    .filter(v => !marked.has(asVector(v)))
+    .filter(n => !doesIntersect(n));
+};
+
+const atLeastOneEdgeVector = (vectors) => {
+  return vectors.some(n => {
+    if (n.vector === 'down') {
+      return (n.x === 0 || n.x === map.length - 1);
+    }
+    if (n.vector === 'right') {
+      return (n.y === 0 || n.y === map[0].length - 1);
+    }
+  });
+};
+
+const isVectorInside = (vector) => {
+  marked.add(asVector(vector));
+
+  const neighbours = getVectorNeighbours(vector);
+
+  neighbours.forEach(n => marked.add(asVector(n)));
+
+  if (!neighbours.length) return true;
+
+  if (atLeastOneEdgeVector(neighbours)) {
+    return false;
+  }
+
+  return neighbours.every(n => isVectorInside(n));
+};
+
+candidates.forEach(candidate => {
+  marked.clear();
+
+  if (isVectorInside(candidate)) {
+    valids.push(candidate);
+  }
+});
+
+console.log(`Part 2 : ${valids.length}`);
