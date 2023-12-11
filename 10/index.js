@@ -71,7 +71,6 @@ do {
     currentY -= 1;
   } else {
     paths.add(asPath(currentX, currentY, startX, startY));
-    paths.add(`${asCoord(currentX, currentY)}->${asCoord(startX, startY)}`);
     canMove = false;
   }
 } while (canMove);
