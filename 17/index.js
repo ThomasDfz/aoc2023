@@ -1,8 +1,9 @@
 const data = require('../parser')();
 const MinHeap = require('../min-heap');
+const { range } = require('../utils');
 
 const lines = data.split('\n');
-const length = lines.length;
+const height = lines.length;
 const width = lines[0].length;
 
 const UP = '^';
@@ -11,8 +12,6 @@ const LEFT = '<';
 const RIGHT = '>';
 
 const asKey = (x, y, d) => x + ';' + y + ';' + d;
-
-const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
 const buildDirections = (max) => ([
   ...range(1, max).map(i => LEFT.repeat(i)),
@@ -51,7 +50,7 @@ const canMoveUp = (node, min, max) => {
   return node.x > 0 && node.dir !== UP.repeat(max) && !node.dir.includes(DOWN) && (node.dir.includes(UP) || node.dir.length >= min);
 };
 const canMoveDown = (node, min, max) => {
-  return node.x < length - 1 && node.dir !== DOWN.repeat(max) && !node.dir.includes(UP) && (node.origin || node.dir.includes(DOWN) || node.dir.length >= min);
+  return node.x < height - 1 && node.dir !== DOWN.repeat(max) && !node.dir.includes(UP) && (node.origin || node.dir.includes(DOWN) || node.dir.length >= min);
 };
 const canMoveLeft = (node, min, max) => {
   return node.y > 0 && node.dir !== LEFT.repeat(max) && !node.dir.includes(RIGHT) && (node.dir.includes(LEFT) || node.dir.length >= min);
@@ -94,7 +93,7 @@ const findLeastHeatLoss = (minMoves, maxMoves) => {
     current = queue.pop();
     current.visited = true;
 
-    if (current.x === length - 1 && current.y === width - 1) break;
+    if (current.x === height - 1 && current.y === width - 1) break;
 
     getAvailableNeighbours(current, nodeMap, minMoves, maxMoves).forEach(neighbour => {
       const newDist = current.dist + neighbour.heatLoss;
