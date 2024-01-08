@@ -61,28 +61,6 @@ const flipCondition = condition => ({
   operator: condition.operator === '>' ? '<=' : '>=',
 });
 
-const assertWorkflow = (workflow, previousConditions) => {
-  if (workflow === 'A') {
-    return previousConditions;
-  }
-
-  if (workflow === 'R') {
-    return false;
-  }
-
-  const conditions = workflows.get(workflow);
-  const combinations = [];
-  const flippedConditions = [];
-
-  for (let i = 0; i < conditions.length; i += 1) {
-    combinations.push(assertWorkflow(conditions[i].target, [...previousConditions, ...flippedConditions, conditions[i]]));
-
-    flippedConditions.push(flipCondition(conditions[i]));
-  }
-
-  return combinations;
-};
-
 const computeCombinations = (combination) => {
   const intervals = {
     x: { min: 1, max: 4000 },
@@ -111,23 +89,31 @@ const computeCombinations = (combination) => {
     * (intervals.s.max - intervals.s.min + 1);
 };
 
-let combinations = assertWorkflow('in', []);
 let total = 0;
 
-while (combinations.length) {
-  combinations = combinations
-    .filter(Boolean)
-    .flat()
-    .filter(combination => {
-      if (!combination[0]?.target) {
-        return true;
-      }
+const assertWorkflow = (workflow, previousConditions) => {
+  if (workflow === 'R') {
+    return;
+  }
 
-      total += computeCombinations(combination);
+  if (workflow === 'A') {
+    total += computeCombinations(previousConditions);
 
-      return false;
-  });
-}
+    return;
+  }
+
+
+  const conditions = workflows.get(workflow);
+  const flippedConditions = [];
+
+  for (let i = 0; i < conditions.length; i += 1) {
+    assertWorkflow(conditions[i].target, [...previousConditions, ...flippedConditions, conditions[i]]);
+
+    flippedConditions.push(flipCondition(conditions[i]));
+  }
+};
+
+assertWorkflow('in', []);
 
 console.log('Part 2 : ', total);
 
