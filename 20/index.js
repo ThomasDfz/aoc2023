@@ -46,11 +46,7 @@ const pushButton = () => {
       mod.targets.forEach(target => queue.push({ id: target, signal: mod.state, source: id }));
     } else if (mod.type === '&') {
       mod.inputs[source] = signal;
-      if (Object.values(mod.inputs).every(Boolean)) {
-        mod.targets.forEach(target => queue.push({ id: target, signal: 0, source: id }));
-      } else {
-        mod.targets.forEach(target => queue.push({ id: target, signal: 1, source: id }));
-      }
+      mod.targets.forEach(target => queue.push({ id: target, signal: +!Object.values(mod.inputs).every(Boolean), source: id }));
     }
   }
 
