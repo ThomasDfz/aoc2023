@@ -1,4 +1,4 @@
-const { asCoords, generateCubesRange } = require('./utils');
+const { asCoords, generateCubesRange } = require('../utils');
 const data = require('../parser')();
 
 const settledCubesMap = new Map();
@@ -74,9 +74,9 @@ const canBeDestroyed = (brick) => {
     return true;
   }
 
-  const topBricksId = [...new Set(collisions.filter(c => c.bottom === brick.id).map(c => c.top))];
-
-  return topBricksId.every(id => collisions.some(c => c.top === id && c.bottom !== brick.id));
+  return collisions
+    .filter(c => c.bottom === brick.id)
+    .every(({ top }) => collisions.some(c => c.top === top && c.bottom !== brick.id));
 };
 
 const part1 = bricks.reduce((sum, brick) => sum + (+canBeDestroyed(brick)), 0);
