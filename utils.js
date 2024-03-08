@@ -1,6 +1,6 @@
 const range = (from, to) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
 
-const asCoords = (x, y, z) => [x, y, z].join(',');
+const asCoords = (...coords) => [...coords].join(';');
 
 const generateCubesRange = (xs, ys, zs, xe, ye, ze) => {
   const cubes = [];
